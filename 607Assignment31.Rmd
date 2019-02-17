@@ -1,15 +1,10 @@
 ---
-title: "607 Assignment 3"
+title: "Assignment 3: Regular Expressions and String Functions"
 author: "Katherine Evers"
-date: "2/9/2019"
+date: "2/16/2019"
 output: html_document
 ---
-
-3. Copy the introductory example. The vector name stores the extracted names.  
-
-   R> name
-[1] "Moe Szyslak" "Burns, C. Montgomery" "Rev. Timothy Lovejoy"
-[4] "Ned Flanders" "Simpson, Homer" "Dr. Julius Hibbert"
+### 3. Copy the introductory example. The vector "name" stores the extracted names.
 
 ```{r}
 raw.data <- "555-1239Moe Szyslak(636) 555-0113Burns, C. Montgomery555-6542Rev. Timothy Lovejoy555 8904Ned Flanders636-555-3226Simpson, Homer5553642Dr. Julius Hibbert"
@@ -18,104 +13,127 @@ library(stringr)
 
 name <-  unlist(str_extract_all(raw.data, "[[:alpha:]., ]{2,}"))
 name
-
-swapNames <- str_replace_all(name, "(\\w+),\\s(\\w+)", "\\2 \\1")
-swapNames 
-
 ```
+
+**(a) Use the tools of this chapter to rearrange the vector so that all elements conform to the standard first_name last_name.**
+
+Extract first names:
 ```{r}
-firstName1 <- unlist(str_extract_all(name, "[[:alpha:]]{2,} "))
-firstName1 
-# "Moe "     "Timothy " "Ned "     "Julius " 
-
-firstName2 <- unlist(str_extract_all(name, "[.,] [[A-z]]{2,}$"))
-firstName2
-# ". Montgomery" ", Homer" 
-
-firstName2 <- unlist(str_extract_all(firstName2, "[^[:punct:]]"))
-firstName2
-" " "M" "o" "n" "t" "g" "o" "m" "e" "r" "y" " " "H" "o" "m" "e" "r"
-
-firstName <- unlist(str_extract_all(name, "[[:alpha:]]{2,}|[.,] [[A-z]]{2,}$ "))
-firstName 
-#[1] "Moe"        "Szyslak"    "Burns"      "Montgomery" "Rev"        "Timothy"    "Lovejoy"    "Ned"       
- #[9] "Flanders"   "Simpson"    "Homer"      "Dr"         "Julius"     "Hibbert"   
-
-firstNames <- c(firstName1, firstName2)
-firstNames
-#"Moe "         "Timothy "     "Ned "         "Julius "      ". Montgomery" ", Homer"   
-
-firstNames <- unlist(str_extract_all(firstNames, "^.?"))
-firstNames
-
-firstName3 = gsub('([[:upper:]])', ' \\1', firstName2)
-firstName3
-#"MontgomeryHomer"
-
-firstName2 <- str_c(firstName3)
-firstName2
-" Montgomery Homer"
-
-firstName25 <- unlist(str_extract_all(firstName2, "[^[:punct:]]"))
-firstName25
-
-firstName2 <- unlist(strsplit(firstName2, "\\ "))
-firstName2
-
-firstNames <- c(firstName1, firstName2)
-firstNames
-
-firstNames2 = gsub('([[:upper:]])', ' \\1', firstNames)
-firstNames2
+#from first name last name format:
+firstName <- unlist(str_extract_all(name, "[[:alpha:]]{2,} "))
+firstName
 ```
-firstName <- unlist(str_extract_all(name, "[.,] [[A-z]]{2,}$|[[A-z]]{2,} "))
-firstName
-
-firstName <- unlist(str_extract_all(name, "[,? [A-z]]{2,}$"))
-firstName
-#"Moe Szyslak"      " Montgomery"      " Timothy Lovejoy" "Ned Flanders"     "Simpson, Homer"   " Julius Hibbert"
 
 
-firstName <- unlist(str_extract_all(name, ",+ [[:alpha:]]{2,}"))
-firstName 
-#", Homer"
-
-firstName <- unlist(str_extract_all(name, " [.+[:alpha:]]{2,}$"))
-firstName 
-# " Szyslak"    " Montgomery" " Lovejoy"    " Flanders"   ", Homer"     " Hibbert" 
+```{r}
+#from last name, first name format
+first <- unlist(str_extract_all(name, ", [[:alpha:].+]{1,}+"))
+first
+```
 
 
-    (a) Use the tools of this chapter to rearrange the vector so that all elements conform to the standard first_name last_name.
+```{r}
+#extract name without comma and space
+FirstName <- sub(".*? (.+)", "\\1", first)
+FirstName
+```
 
-    (b) Construct a logical vector indicating whether a character has a title (i.e., Rev. and Dr.).
+
+```{r}
+firstNames <- c(firstName, FirstName)
+firstNames
+```
+
+Extract last names:
+```{r}
+#from first name last name format:
+lastName <- unlist(str_extract_all(name, "\\b .+\\b"))
+lastName
+```
+
+```{r}
+#extract name without space before
+lastName1 <- sub(".*? ", "\\1", lastName)
+lastName1
+```
+
+```{r}
+#from last name, first name format
+last <- unlist(str_extract_all(name, "[[:alpha:]]{2,},"))
+last
+```
+
+```{r}
+#extract name without comma
+LastName <- sub(",", "\\1", last)
+LastName
+```
+
+```{r}
+lastNames <- c(lastName1, LastName)
+lastNames
+```
+
+Create a data frame with first names and last names:
+```{r}
+df <- data.frame("First Name" = firstNames, "Last Name" = lastNames)
+knitr::kable(df)
+
+```
+
+Create a vector of first and last names:
+```{r}
+namesVector <- paste0(firstNames,' ',lastNames)
+namesVector
+```
+
+
+**(b) Construct a logical vector indicating whether a character has a title (i.e., Rev. and Dr.).**
     
-    (c) Construct a logical vector indicating whether a character has a second name.
+```{r}
+prefix <- (str_extract_all(name, "[[A-z]]{2,}\\."))
+prefix
 
-4. Describe the types of strings that conform to the following regular expressions and construct an example that is matched by the regular expression.
+title <- str_detect(name, "[[:alpha:]]{2,}\\.")
+title
+```
 
-    (a) [0-9]+\\$
-        This expression returns a string of 1 or more numbers followed by a $.
-        
+
+**(c) Construct a logical vector indicating whether a character has a second name.**
+
+```{r}
+middleName <- str_extract_all(name,"\\,\\s\\w\\.\\s[[:alpha:]]{2,}")
+middleName
+
+secondName <- str_detect(name,"\\,\\s\\w\\.\\s[[:alpha:]]{2,}")
+secondName
+```
+### 4. Describe the types of strings that conform to the following regular expressions and construct an example that is matched by the regular expression.**
+
+    **(a) [0-9]+\\$**
+        This expression returns strings of 1 or more numbers followed by a $.
 ```{r}
 example1 <- "35iu68903$64678$t8bhj$246"
 str_extract_all(example1, "[0-9]+\\$" )
 ```
         
-    
-    (b) \\b[a-z]{1,4}\\b
-        This expression returns a string of 1-4 lowercase letters
+    **(b) \\b[a-z]{1,4}\\b**
+        This expression returns strings of 1-4 lowercase letters
 ```{r}
 example2 <- c("abc", "de", "f", "ghij", "kl123")
 str_extract_all(example2, "\\b[a-z]{1,4}\\b")
 ```
+  
+    **(c) .*?\\.txt$**
+        This expression returns strings that end with ".txt"
+```{r}
+example3 <- c("abc.txt", "abc.doc", "txt")
+str_extract_all(example3, ".*?\\.txt$")
+```
         
     
-    
-    (c) .*?\\.txt$
-        This expression returns 
-    
-    (d) \\d{2}/\\d{2}/\\d{4}
-        This string returns a date format: any 2 digits, forward slash, any 2 digits, forward slash, any 4 digits
+    **(d) \\d{2}/\\d{2}/\\d{4}**
+        This string returns date formats: any 2 digits, forward slash, any 2 digits, forward slash, any 4 digits
         
 ```{r}
 example3 <- c("02/11/2019", "2/11/19", "04/02/2018", "1789/12", "12387689")
@@ -123,18 +141,37 @@ str_extract_all(example3, "\\d{2}/\\d{2}/\\d{4}")
 ```
         
     
-    (e) <(.+?)>.+?</\\1>
-        This expression returns 
+    **(e) <(.+?)>.+?</\\1>**
+        This expression returns strings that have html format
+```{r}
+example4 <- c("<p>Hello world</p>", "Hello", "<Hi>")
+str_extract_all(example4,"<(.+?)>.+?</\\1>")
+```
+        
 
-9. The following code hides a secret message. Crack it with R and regular expressions. Hint: Some of the characters are more revealing than others! The code snippet is also
-available in the materials at www.r-datacollection.com.
+### 9. The following code hides a secret message. Crack it with R and regular expressions. Hint: Some of the characters are more revealing than others! The code snippet is also available in the materials at www.r-datacollection.com.**
 
     clcopCow1zmstc0d87wnkig7OvdicpNuggvhryn92Gjuwczi8hqrfpRxs5Aj5dwpn0TanwoUwisdij7Lj8kpf03AT5Idr3coc0bt7yczjatOaootj55t3Nj3ne6c4Sfek.r1w1YwwojigOd6vrfUrbz2.2bkAnbhzgv4R9i05zEcrop.wAgnb.SqoU65fPa1otfb7wEm24k6t3sR9zqe5fy89n6Nd5t9kc4fE905gmc4Rgxo5nhDk!gr
     
 ```{r}
 message <- "clcopCow1zmstc0d87wnkig7OvdicpNuggvhryn92Gjuwczi8hqrfpRxs5Aj5dwpn0TanwoUwisdij7Lj8kpf03AT5Idr3coc0bt7yczjatOaootj55t3Nj3ne6c4Sfek.r1w1YwwojigOd6vrfUrbz2.2bkAnbhzgv4R9i05zEcrop.wAgnb.SqoU65fPa1otfb7wEm24k6t3sR9zqe5fy89n6Nd5t9kc4fE905gmc4Rgxo5nhDk!gr"
 
+#Remove numbers
 message <- unlist(str_extract_all(message, "[^[:digit:]]"))
 message
+
+#Remove lower case letters
+message1 <- unlist(str_extract_all(message, "[^[:lower:]]"))
+message1
+
+#Concatenate individual letters
+message2 <- paste(message1, collapse = '')
+message2
+
+#Replace periods with spaces
+message3 <- unlist(str_replace_all(message2,"\\.", " "))
+message3
+
 ```
+
 
